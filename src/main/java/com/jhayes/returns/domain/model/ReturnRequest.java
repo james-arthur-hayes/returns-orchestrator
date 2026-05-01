@@ -1,4 +1,4 @@
-package com.jhayes.returns.domain;
+package com.jhayes.returns.domain.model;
 
 // This represents the data coming into the system
 public record ReturnRequest(

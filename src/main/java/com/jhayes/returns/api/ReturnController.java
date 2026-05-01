@@ -1,7 +1,7 @@
 package com.jhayes.returns.api;
 
-import com.jhayes.returns.domain.ReturnRequest;
-import com.jhayes.returns.domain.ReturnResponse;
+import com.jhayes.returns.domain.model.ReturnRequest;
+import com.jhayes.returns.domain.model.ReturnResponse;
 import com.jhayes.returns.orchestration.ReturnOrchestrator;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;

@@ -1,4 +1,4 @@
-package com.jhayes.returns.domain;
+package com.jhayes.returns.domain.model;
 
 import java.time.LocalDateTime;
 
