@@ -13,7 +13,34 @@ java {
     }
 }
 
-// Forces Gradle to look only at these specific paths
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. THE CORE ENGINE (Reactive only, no standard 'web')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // 2. THE DATABASE (Reactive SQL Server)
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+    runtimeOnly 'io.r2dbc:r2dbc-mssql:1.0.0.RELEASE'
+
+    // 3. THE DEVELOPER TOOLS (Lombok saves lives at 4:30 AM)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 4. THE TESTING SUITE
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+}
+
+// Keep this so Gradle knows exactly where to look
+springBoot {
+    mainClass = 'com.jhayes.returns.ReturnsApplication'
+}
+
 sourceSets {
     main {
         java {
@@ -23,31 +50,4 @@ sourceSets {
             srcDirs = ['src/main/resources']
         }
     }
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    // The Reactive Web Engine
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-    // The Reactive Database Layer (SQL Server)
-    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-    runtimeOnly 'io.r2dbc:r2dbc-mssql:1.0.0.RELEASE'
-
-    // Developer Tools
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-    // Testing Suite
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'io.projectreactor:reactor-test'
-}
-
-springBoot {
-    mainClass = 'com.jhayes.returns.ReturnsApplication'
 }
