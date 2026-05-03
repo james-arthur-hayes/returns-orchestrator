@@ -3,6 +3,7 @@ package com.jhayes.returns.orchestration;
 import com.jhayes.returns.domain.model.ReturnRequest;
 import com.jhayes.returns.domain.model.ReturnResponse;
 import com.jhayes.returns.domain.service.ReturnService;
+import com.jhayes.returns.exception.ReturnNotFoundException;
 import com.jhayes.returns.repository.ManifestRepository;
 import com.jhayes.returns.repository.ReturnManifest;
 import com.jhayes.returns.strategy.factory.TriageFactory;
@@ -41,8 +42,6 @@ public class ReturnOrchestrator {
 
     public Mono<ReturnManifest> getReturnStatus(String trackingId) {
         return repository.findByTrackingId(trackingId)
-                // This is the "Pro" part: if the DB is empty, we log it or handle it
-                .doOnNext(found -> System.out.println("Found return for: " + trackingId))
-                .switchIfEmpty(Mono.error(new RuntimeException("Return not found for tracking ID: " + trackingId)));
+                .switchIfEmpty(Mono.error(new ReturnNotFoundException(trackingId)));
     }
 }
