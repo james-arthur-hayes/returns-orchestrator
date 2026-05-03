@@ -35,6 +35,9 @@ dependencies {
     // 4. THE TESTING SUITE
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
 }
 
 // Keep this so Gradle knows exactly where to look
@@ -51,4 +54,8 @@ sourceSets {
             srcDirs = ['src/main/resources']
         }
     }
+}
+
+test {
+    useJUnitPlatform()
 }

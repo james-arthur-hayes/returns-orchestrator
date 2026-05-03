@@ -6,5 +6,6 @@ import java.time.LocalDateTime;
 public record ReturnResponse(
         String trackingId,
         String status,
-        LocalDateTime timestamp
+        String labelUrl,
+        Long timestamp
 ) {}

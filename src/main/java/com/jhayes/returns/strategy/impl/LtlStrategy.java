@@ -22,7 +22,8 @@ public class LtlStrategy implements TriageStrategy {
         return Mono.just(new ReturnResponse(
                 "LTL-" + UUID.randomUUID().toString().substring(0, 8),
                 "FREIGHT_REQUIRED",
-                LocalDateTime.now()
+                null,
+                System.currentTimeMillis()
         ));
     }
 }

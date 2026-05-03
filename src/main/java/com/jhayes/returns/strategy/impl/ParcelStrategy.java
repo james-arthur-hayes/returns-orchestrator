@@ -22,7 +22,8 @@ public class ParcelStrategy implements TriageStrategy {
         return Mono.just(new ReturnResponse(
                 "PRCL-" + UUID.randomUUID().toString().substring(0, 8),
                 "PARCEL_READY",
-                LocalDateTime.now()
+                null,
+                System.currentTimeMillis()
         ));
     }
 }
