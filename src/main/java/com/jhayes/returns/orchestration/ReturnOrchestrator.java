@@ -38,4 +38,11 @@ public class ReturnOrchestrator {
         return repository.save(manifest)
                 .thenReturn(res); // After the save finishes, send the original response back
     }
+
+    public Mono<ReturnManifest> getReturnStatus(String trackingId) {
+        return repository.findByTrackingId(trackingId)
+                // This is the "Pro" part: if the DB is empty, we log it or handle it
+                .doOnNext(found -> System.out.println("Found return for: " + trackingId))
+                .switchIfEmpty(Mono.error(new RuntimeException("Return not found for tracking ID: " + trackingId)));
+    }
 }
