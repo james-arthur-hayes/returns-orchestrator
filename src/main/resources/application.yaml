@@ -1,20 +1,23 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: returns-orchestrator
 
-  # THE SAFETY SWITCH
-  # We exclude these because you have the dependencies in your build.gradle,
-  # but we haven't given the app a real SQL Server URL yet.
-  # This prevents "Failed to configure a DataSource" errors on startup.
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  r2dbc:
+    # Use double quotes and verify the ? and &
+    url: "r2dbc:mssql://localhost:1433/returns_db?encrypt=true&trustServerCertificate=true"
+    username: sa
+    password: Hayeja123!
+    pool:
+      initial-size: 5
+      max-size: 20
+
+  sql:
+    init:
+      mode: always
+      separator: ";" # Explicitly tell Spring where one command ends and the next begins
 
 logging:
   level:
     root: INFO
-    com.jhayes.returns: DEBUG # Helps us see our own logic in the console
+    org.springframework.data.r2dbc: DEBUG
+    com.jhayes.returns: DEBUG
