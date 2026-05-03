@@ -21,4 +21,5 @@ public class ReturnManifest {
     private String orderId;
     private String status;
     private LocalDateTime createdAt;
+    private String labelUrl;
 }

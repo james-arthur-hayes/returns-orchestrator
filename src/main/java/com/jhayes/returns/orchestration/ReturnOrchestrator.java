@@ -1,5 +1,6 @@
 package com.jhayes.returns.orchestration;
 
+import com.jhayes.returns.client.CarrierClient;
 import com.jhayes.returns.domain.model.ReturnRequest;
 import com.jhayes.returns.domain.model.ReturnResponse;
 import com.jhayes.returns.domain.service.ReturnService;
@@ -17,15 +18,18 @@ public class ReturnOrchestrator {
 
     private final TriageFactory triageFactory;
     private final ReturnService returnService;
-    private final ManifestRepository repository; // Add this!
+    private final ManifestRepository repository;
+    private final CarrierClient carrierClient;
 
     public Mono<ReturnResponse> processReturn(ReturnRequest request) {
         return returnService.validate(request)
                 .flatMap(validReq -> triageFactory.getStrategy(validReq).execute(validReq))
-                .flatMap(response -> saveToDatabase(request, response)); // Chained save
+                .flatMap(response -> carrierClient.requestLabel(response.trackingId())
+                        .flatMap(labelUrl -> saveToDatabase(request, response, labelUrl))
+                );
     }
 
-    private Mono<ReturnResponse> saveToDatabase(ReturnRequest req, ReturnResponse res) {
+    private Mono<ReturnResponse> saveToDatabase(ReturnRequest req, ReturnResponse res, String labelUrl) {
         ReturnManifest manifest = ReturnManifest.builder()
                 .trackingId(res.trackingId())
                 .sku(req.sku())
@@ -33,6 +37,7 @@ public class ReturnOrchestrator {
                 .customerEmail(req.customerEmail())
                 .orderId(req.orderId())
                 .status(res.status())
+                .labelUrl(labelUrl)
                 .createdAt(res.timestamp())
                 .build();
 
