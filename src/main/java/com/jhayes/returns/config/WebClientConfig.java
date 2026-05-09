@@ -12,7 +12,7 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
         return builder
-                // We point this to our own app (localhost:8080) for the mock test
+                // This is pointed the app (localhost:8080) for the mock test
                 .baseUrl("http://localhost:8080")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();

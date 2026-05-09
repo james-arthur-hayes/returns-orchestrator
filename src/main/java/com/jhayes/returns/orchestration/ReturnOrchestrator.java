@@ -42,7 +42,7 @@ public class ReturnOrchestrator {
                 .build();
 
         return repository.save(manifest)
-                .thenReturn(res); // After the save finishes, send the original response back
+                .thenReturn(res);
     }
 
     public Mono<ReturnManifest> getReturnStatus(String trackingId) {

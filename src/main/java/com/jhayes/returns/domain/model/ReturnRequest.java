@@ -10,7 +10,7 @@ public record ReturnRequest(
         @NotBlank(message = "SKU is required")
         String sku,
 
-        @Min(value = 1, message = "Quantity must be at least 1") // Spring uses this for the list
+        @Min(value = 1, message = "Quantity must be at least 1")
         int quantity,
 
         @NotBlank(message = "Pickup ZIP is required")
@@ -23,7 +23,6 @@ public record ReturnRequest(
         String reasonCode,
         String orderId
 ) {
-    // Keep this for programmatic safety, but Spring will usually trigger the @Min first
     public ReturnRequest {
         if (quantity < 1) {
             // We don't necessarily need to throw here if @Min is doing the job

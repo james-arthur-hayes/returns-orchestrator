@@ -14,7 +14,7 @@ spring:
   sql:
     init:
       mode: always
-      separator: ";" # Explicitly tell Spring where one command ends and the next begins
+      separator: ";" # Explicitly tells Spring where one command ends and the next begins
 
 logging:
   level:

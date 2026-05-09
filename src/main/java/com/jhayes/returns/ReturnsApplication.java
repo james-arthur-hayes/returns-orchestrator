@@ -8,7 +8,7 @@ public class ReturnsApplication {
 
     public static void main(String[] args) {
         // This is the command that starts the Netty server (WebFlux)
-        // and wires up all your @Service and @RestController classes.
+        // and wires up all the @Service and @RestController classes.
         SpringApplication.run(ReturnsApplication.class, args);
     }
 }

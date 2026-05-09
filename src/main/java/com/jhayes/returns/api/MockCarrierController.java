@@ -16,7 +16,7 @@ public class MockCarrierController {
     @PostMapping("/generate")
     public Mono<Map<String, String>> generateLabel(@RequestBody Map<String, String> request) {
         String trackingId = request.get("trackingId");
-        // Simulate a 500ms network delay
+
         return Mono.just(Map.of(
                 "labelUrl", "https://carrier.com/labels/" + trackingId + ".pdf",
                 "status", "SUCCESS"

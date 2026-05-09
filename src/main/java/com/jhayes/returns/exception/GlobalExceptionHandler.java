@@ -14,7 +14,6 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Step 1: Add a Logger
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(WebExchangeBindException.class)
@@ -23,7 +22,7 @@ public class GlobalExceptionHandler {
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .toList(); // Modern Java 21 syntax
+                .toList();
 
         log.warn("Validation failed for request: {}", errors);
 
@@ -36,8 +35,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // Step 2: Specific handler for "Not Found" to avoid 500 errors
-    // We'll assume you throw a custom ReturnNotFoundException in your service
     @ExceptionHandler(ReturnNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ReturnNotFoundException ex) {
         log.info("Resource not found: {}", ex.getMessage());
@@ -79,7 +76,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // This is the LAST resort. We log it as an ERROR because 500s are "our fault."
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllUncaughtErrors(Exception ex) {
         log.error("UNEXPECTED SYSTEM ERROR: ", ex);
