@@ -16,6 +16,20 @@ spring:
       mode: always
       separator: ";" # Explicitly tells Spring where one command ends and the next begins
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: returns-group
+      auto-offset-reset: earliest
+      # These two lines tell Spring how to read the raw bytes from Kafka
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      # This is the security 'trust' setting
+      spring.json.trusted.packages: "com.jhayes.returns.domain.model"
+
 logging:
   level:
     root: INFO

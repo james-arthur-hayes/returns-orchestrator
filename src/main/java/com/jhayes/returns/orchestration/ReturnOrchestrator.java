@@ -1,6 +1,7 @@
 package com.jhayes.returns.orchestration;
 
 import com.jhayes.returns.client.CarrierClient;
+import com.jhayes.returns.domain.model.ReturnInitiatedEvent;
 import com.jhayes.returns.domain.model.ReturnRequest;
 import com.jhayes.returns.domain.model.ReturnResponse;
 import com.jhayes.returns.domain.service.ReturnService;
@@ -12,6 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @Component
 @RequiredArgsConstructor
 public class ReturnOrchestrator {
@@ -20,13 +25,24 @@ public class ReturnOrchestrator {
     private final ReturnService returnService;
     private final ManifestRepository repository;
     private final CarrierClient carrierClient;
+    private final ReturnEventPublisher eventPublisher;
 
-    public Mono<ReturnResponse> processReturn(ReturnRequest request) {
+    public Mono<ReturnResponse> processReturn(ReturnRequest request, String traceId) {
         return returnService.validate(request)
                 .flatMap(validReq -> triageFactory.getStrategy(validReq).execute(validReq))
                 .flatMap(response -> carrierClient.requestLabel(response.trackingId())
                         .flatMap(labelUrl -> saveToDatabase(request, response, labelUrl))
-                );
+                )
+                // Fire the Kafka Event after the DB save is successful
+                .doOnSuccess(res -> eventPublisher.publishReturnEvent(
+                        new ReturnInitiatedEvent(
+                                res.trackingId(),
+                                request.customerEmail(),
+                                res.status(),
+                                "Return processed and manifest saved.",
+                                traceId
+                        )
+                ));
     }
 
     private Mono<ReturnResponse> saveToDatabase(ReturnRequest req, ReturnResponse res, String labelUrl) {
@@ -38,7 +54,7 @@ public class ReturnOrchestrator {
                 .orderId(req.orderId())
                 .status(res.status())
                 .labelUrl(labelUrl)
-                .createdAt(res.timestamp())
+                .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(res.timestamp()), ZoneId.systemDefault()))
                 .build();
 
         return repository.save(manifest)

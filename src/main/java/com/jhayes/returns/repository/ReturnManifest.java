@@ -20,6 +20,6 @@ public class ReturnManifest {
     private String customerEmail;
     private String orderId;
     private String status;
-    private Long createdAt;
+    private LocalDateTime createdAt;
     private String labelUrl;
 }
