@@ -1,0 +1,17 @@
+server:
+  port: 8082 # Unique port for Notifications
+
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group # Unique group ID for Fan-out!
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.jhayes.returns.*"
+        # Mapping for those legacy messages still in your queue
+        spring.json.type.mapping: "com.jhayes.returns.domain.model.ReturnInitiatedEvent:com.jhayes.returns.event.ReturnInitiatedEvent"

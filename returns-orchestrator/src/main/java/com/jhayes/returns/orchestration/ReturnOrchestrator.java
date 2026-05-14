@@ -1,0 +1,69 @@
+package com.jhayes.returns.orchestration;
+
+import com.jhayes.returns.client.CarrierClient;
+import com.jhayes.returns.event.ReturnInitiatedEvent;
+import com.jhayes.returns.event.ReturnRequest;
+import com.jhayes.returns.event.ReturnResponse;
+import com.jhayes.returns.domain.service.ReturnService;
+import com.jhayes.returns.exception.ReturnNotFoundException;
+import com.jhayes.returns.repository.ManifestRepository;
+import com.jhayes.returns.repository.ReturnManifest;
+import com.jhayes.returns.strategy.factory.TriageFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+@Component
+@RequiredArgsConstructor
+public class ReturnOrchestrator {
+
+    private final TriageFactory triageFactory;
+    private final ReturnService returnService;
+    private final ManifestRepository repository;
+    private final CarrierClient carrierClient;
+    private final ReturnEventPublisher eventPublisher;
+
+    public Mono<ReturnResponse> processReturn(ReturnRequest request, String traceId) {
+        return returnService.validate(request)
+                .flatMap(validReq -> triageFactory.getStrategy(validReq).execute(validReq))
+                .flatMap(response -> carrierClient.requestLabel(response.trackingId())
+                        .flatMap(labelUrl -> saveToDatabase(request, response, labelUrl))
+                )
+                // Fire the Kafka Event after the DB save is successful
+                .doOnSuccess(res -> eventPublisher.publishReturnEvent(
+                        new ReturnInitiatedEvent(
+                                res.trackingId(),       // returnId
+                                request.orderId(),      // orderId
+                                request.customerId(),   // customerId
+                                request.customerEmail(),// customerEmail
+                                request.sku(),          // sku
+                                traceId                 // traceId
+                        )
+                ));
+    }
+
+    private Mono<ReturnResponse> saveToDatabase(ReturnRequest req, ReturnResponse res, String labelUrl) {
+        ReturnManifest manifest = ReturnManifest.builder()
+                .trackingId(res.trackingId())
+                .sku(req.sku())
+                .quantity(req.quantity())
+                .customerEmail(req.customerEmail())
+                .orderId(req.orderId())
+                .status(res.status())
+                .labelUrl(labelUrl)
+                .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(res.timestamp()), ZoneId.systemDefault()))
+                .build();
+
+        return repository.save(manifest)
+                .thenReturn(res);
+    }
+
+    public Mono<ReturnManifest> getReturnStatus(String trackingId) {
+        return repository.findByTrackingId(trackingId)
+                .switchIfEmpty(Mono.error(new ReturnNotFoundException(trackingId)));
+    }
+}
