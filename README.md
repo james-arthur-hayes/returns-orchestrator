@@ -1,25 +1,39 @@
-# Returns Orchestrator: Reactive Microservice
+# Returns Orchestrator: Event-Driven Reactive Ecosystem
 
 ## 📖 Overview
-A high-performance, non-blocking microservice built with **Spring WebFlux** designed to orchestrate complex product return workflows. This project demonstrates the transition from traditional imperative programming to **Reactive Streams**, ensuring system resiliency and high concurrency under heavy load.
+A high-scale, non-blocking microservice ecosystem designed to orchestrate complex product return workflows using an **Event-Driven Architecture (EDA)**. Built with **Spring WebFlux** and **Apache Kafka**, this project demonstrates a modern approach to distributed systems, ensuring high concurrency, resiliency, and loose coupling between core orchestration and downstream logistics.
+
+
+<img src="img.png" style="width: 35%;">
+
+## 🏗️ Multi-Module Architecture
+This project is architected as a **Multi-Module Gradle build**, enforcing strict domain boundaries and enabling code reuse through a shared contract layer:
+
+* **`common-models`**: The "Single Source of Truth." A shared library containing Java 21 Records and DTOs, ensuring schema consistency and preventing "integration drift" across services.
+* **`returns-orchestrator`**: The Core Producer. Manages the ingress API, business validation, and persistence, then publishes domain events to Kafka.
+* **`carrier-service`**: A reactive consumer that independently manages 3PL logistics and shipping label generation.
+* **`notification-service`**: A reactive consumer that handles customer-facing communications via SMTP/SendGrid.
 
 ---
 
-## ⚠️ The Problem
-Traditional imperative microservices often struggle with **thread-starvation** and high latency when orchestrating multiple third-party logistics (3PL) APIs during a return lifecycle. Sequential processing of validation, carrier selection, and label generation creates bottlenecks that hinder scalability.
+## ✅ The Solution: Reactive Fan-Out
+Traditional imperative microservices often struggle with thread-starvation and high latency when orchestrating multiple third-party APIs. This solution solves that through:
 
-## ✅ The Solution
-This orchestrator uses a **fully reactive approach** to handle thousands of concurrent return requests with minimal resource overhead. By leveraging non-blocking I/O, it ensures that "Decision Intelligence" is delivered in real-time, regardless of external API latencies.
+* **Reactive Streams**: Utilizing Project Reactor (`Mono`/`Flux`) to handle thousands of concurrent requests with minimal resource overhead.
+* **Kafka Fan-Out Pattern**: By publishing a `ReturnInitiatedEvent`, the Orchestrator allows multiple services to react to the same data point simultaneously without being directly coupled to the source.
 
 ---
 
 ## 🚀 Key Architectural Patterns
 
-* **Reactive Orchestration:** Utilizes Project Reactor (`Mono`/`Flux`) to manage asynchronous workflows, from validation and triage to external API integration and database persistence.
-* **Intelligent Triage (Strategy Pattern):** Implements a `TriageFactory` to dynamically route requests to specific logic handlers (e.g., LTL Freight vs. Standard Parcel). This decouples business rules from routing, allowing for rapid scaling of decision-making logic.
-* **Resilient External Integration:** Leverages `WebClient` with built-in timeout and fallback mechanisms to interact with third-party carrier APIs, preventing cascading failures in the logistics chain.
-* **Reactive Data Access:** Uses **Spring Data R2DBC** for non-blocking communication with SQL Server, maintaining a fully reactive chain from the HTTP layer to the disk.
-* **Observability & Monitoring:** Integrated structured logging and health indicators (**Spring Boot Actuator**) to ensure system reliability and a "zero-blind-spot" on-call experience, facilitating methodical debugging in production.
+### Intelligent Triage (Strategy Pattern)
+Uses a `TriageFactory` to dynamically route requests to specific logic handlers (e.g., LTL Freight vs. Standard Parcel) at runtime based on product metadata.
+
+### Distributed Tracing & Observability
+Implements a custom **Trace ID propagation** strategy. The ID travels from the initial REST call, through the database, into Kafka Headers, and finally into the logs of every consumer service, enabling end-to-end visibility.
+
+### Resilient Data Access
+Uses **Spring Data R2DBC** for non-blocking communication with SQL Server, maintaining a fully reactive chain from the HTTP layer to the disk.
 
 ---
 
@@ -29,20 +43,19 @@ This orchestrator uses a **fully reactive approach** to handle thousands of conc
 | :--- | :--- |
 | **Language** | Java 21 (Records, Pattern Matching) |
 | **Framework** | Spring Boot 3.2+ |
-| **Web Stack** | Spring WebFlux (Netty-based) |
-| **Persistence** | R2DBC / Microsoft SQL Server |
+| **Messaging** | Apache Kafka (Event-Driven Fan-out) |
 | **Reactive Library** | Project Reactor (`flatMap`, `zip`, `onErrorResume`) |
-| **Testing** | JUnit 5 & StepVerifier |
-| **Documentation** | OpenAPI / Swagger |
+| **Persistence** | R2DBC / Microsoft SQL Server |
+| **Build Tool** | Gradle (Multi-Module) |
+| **API Layer** | Spring WebFlux (Netty-based) |
 
 ---
 
-## 🧪 Testing & Quality Assurance
-This project maintains high reliability through a comprehensive test suite:
+## ✅ Data Integrity & Validation
+The system ensures high data quality at the ingress point using **Jakarta Bean Validation**:
 
-* **StepVerifier:** To validate asynchronous event signals and backpressure in reactive streams.
-* **Mockito:** For isolated testing of orchestration logic by mocking external service dependencies.
-* **Jakarta Validation:** Ensuring strict data integrity for all incoming API payloads.
+1.  **Payload Constraints**: Strict validation on incoming `ReturnRequest` objects (e.g., Email format, SKU requirements, and non-empty IDs) to prevent malformed data from entering the reactive pipeline.
+2.  **Schema Enforcement**: The `common-models` module acts as a strict contract, ensuring that the Orchestrator and all Consumer services are always in sync.
 
 ---
 
@@ -50,4 +63,35 @@ This project maintains high reliability through a comprehensive test suite:
 
 ### Prerequisites
 * Java 21
-* SQL Server (or Docker for a containerized instance)
+* Docker & Docker Compose (for Kafka and SQL Server instances)
+
+### Running the Ecosystem
+1.  **Start Infrastructure**: `docker-compose up -d`
+2.  **Build Project**: `./gradlew clean build`
+3.  **Launch Services**:
+    * `:returns-orchestrator` (Port 8080)
+    * `:carrier-service` (Port 8081)
+    * `:notification-service` (Port 8082)
+
+### Sample API Request
+**Endpoint:** `POST /api/v1/returns`
+
+```json
+{
+  "sku": "HAYE-PROD-001",
+  "quantity": 1,
+  "pickupZip": "90210",
+  "customerId": "CUST-JH-01",
+  "customerEmail": "james@example.com",
+  "reasonCode": "DEFECTIVE",
+  "orderId": "ORD-2026-99"
+}
+```
+
+---
+
+## 🔮 Future Roadmap & Enhancements
+* **Reactive Unit Testing**: Implementing a comprehensive test suite using `StepVerifier` to validate asynchronous event signals and backpressure handling.
+* **Integration Testing**: Utilizing **Testcontainers** to run automated integration tests against live Kafka and SQL Server instances.
+* **Fault Tolerance**: Implementing **Dead Letter Queues (DLQ)** for Kafka consumer retries.
+* **State Machine**: Transitioning from discrete events to a full **Saga Pattern** for long-running return lifecycles.
