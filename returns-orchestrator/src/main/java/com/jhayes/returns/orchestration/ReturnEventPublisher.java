@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 
-@Slf4j // 1. Replaces System.out with senior-level structured logging
+@Slf4j
 @Service
 public class ReturnEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final Tracer tracer; // 2. Automatically provided by Spring Boot's tracing bridge
-    private static final String TOPIC = "return-events.v1";
+    private final Tracer tracer; // Automatically provided by Spring Boot's tracing bridge
+    private static final String TOPIC = "return-events.v1"; // Kafka topic for return events
 
     // Constructor injection includes both the template and the tracer
     public ReturnEventPublisher(KafkaTemplate<String, Object> kafkaTemplate, Tracer tracer) {
@@ -25,22 +25,22 @@ public class ReturnEventPublisher {
     }
 
     public void publishReturnEvent(ReturnInitiatedEvent event) {
-        // 3. Convert to a ProducerRecord so we can attach custom network metadata/headers
+        // Convert to a ProducerRecord so we can attach custom network metadata/headers
         ProducerRecord<String, Object> producerRecord = new ProducerRecord<>(TOPIC, event.returnId(), event);
 
-        // 4. Intercept the active trace ID from the running reactive thread context
+        // Intercept the active trace ID from the running reactive thread context
         var currentSpan = tracer.currentSpan();
         if (currentSpan != null) {
             String traceId = currentSpan.context().traceId();
 
-            // 5. Inject the trace ID straight into the outbound Kafka message headers
+            // Inject the trace ID straight into the outbound Kafka message headers
             producerRecord.headers().add(new RecordHeader("x-b3-traceid", traceId.getBytes(StandardCharsets.UTF_8)));
             log.info("Successfully stamped outbound trace context header: {}", traceId);
         } else {
             log.warn("No active tracing context found. Kafka event will be emitted un-monitored.");
         }
 
-        // 6. Asynchronously fire the event to the Kafka broker
+        // Asynchronously fire the event to the Kafka broker
         kafkaTemplate.send(producerRecord)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {

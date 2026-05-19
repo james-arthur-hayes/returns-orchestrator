@@ -30,17 +30,17 @@ dependencies {
     implementation 'io.projectreactor:reactor-core'
     implementation 'io.projectreactor.kafka:reactor-kafka'
 
-    // 2. THE DATABASE (Reactive SQL Server)
+    // THE DATABASE (Reactive SQL Server)
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
     runtimeOnly 'io.r2dbc:r2dbc-mssql:1.0.0.RELEASE'
 
-    // 3. THE DEVELOPER TOOLS (Lombok saves lives at 4:30 AM)
+    // THE DEVELOPER TOOLS (Lombok saves lives at 4:30 AM)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // 4. THE TESTING SUITE
+    // THE TESTING SUITE
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

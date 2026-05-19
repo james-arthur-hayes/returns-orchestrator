@@ -31,7 +31,6 @@ public class ReturnOrchestrator {
 
     public Mono<ReturnResponse> processReturn(ReturnRequest request, String traceId) {
         return Mono.deferContextual(context -> {
-            // [ORCHESTRATOR-API] - Captures web-layer ingress
             log.info("[ORCHESTRATOR-API] Ingesting incoming return request for Order: [{}], SKU: [{}]",
                     request.orderId(), request.sku());
 
@@ -39,18 +38,15 @@ public class ReturnOrchestrator {
                     .doOnNext(validReq -> log.info("[ORCHESTRATOR-VALIDATION] Data verification rules cleared for Order: [{}]",
                             validReq.orderId()))
 
-                    // [ORCHESTRATOR-CORE] - Core business triage matrix calculation
                     .flatMap(validReq -> triageFactory.getStrategy(validReq).execute(validReq))
                     .doOnNext(response -> log.info("[ORCHESTRATOR-CORE] Return routing strategy computed -> Assigned Tracking ID: [{}] with Status: [{}]",
                             response.trackingId(), response.status()))
 
-                    // [ORCHESTRATOR-CARRIER] - Interacting with external 3PL integrations
                     .flatMap(response -> carrierClient.requestLabel(response.trackingId())
                             .doOnNext(labelUrl -> log.info("[ORCHESTRATOR-CARRIER] External 3PL carrier label generated successfully -> URL: [{}]", labelUrl))
                             .flatMap(labelUrl -> saveToDatabase(request, response, labelUrl))
                     )
 
-                    // [ORCHESTRATOR-KAFKA] - Outbound event stream dispatch
                     .doOnSuccess(res -> {
                         log.info("[ORCHESTRATOR-KAFKA] Broadcasting ReturnInitiatedEvent downstream for Tracking ID: [{}]", res.trackingId());
                         eventPublisher.publishReturnEvent(
@@ -84,7 +80,6 @@ public class ReturnOrchestrator {
                 .build();
 
         return repository.save(manifest)
-                // [ORCHESTRATOR-DATABASE] - Persistent audit storage operations
                 .doOnSuccess(savedManifest -> log.info("[ORCHESTRATOR-DATABASE] Manifest audit record permanently persisted for Tracking ID: [{}]",
                         savedManifest.getTrackingId()))
                 .thenReturn(res);
@@ -92,7 +87,6 @@ public class ReturnOrchestrator {
 
     public Mono<ReturnManifest> getReturnStatus(String trackingId) {
         return Mono.defer(() -> {
-            // [ORCHESTRATOR-LOOKUP] - Read query operations
             log.info("[ORCHESTRATOR-LOOKUP] Executing operational trace for Tracking ID: [{}]", trackingId);
 
             return repository.findByTrackingId(trackingId)

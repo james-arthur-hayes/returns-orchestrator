@@ -23,7 +23,7 @@ public class ReturnEventListener {
     public void handleReturn(ConsumerRecord<String, ReturnInitiatedEvent> record) {
         String incomingTraceId = null;
 
-        // 1. Extract the shared trace header from the incoming network metadata packet
+        // Extract the shared trace header from the incoming network metadata packet
         Header traceHeader = record.headers().lastHeader("x-b3-traceid");
         if (traceHeader != null) {
             incomingTraceId = new String(traceHeader.value(), StandardCharsets.UTF_8);
@@ -36,7 +36,7 @@ public class ReturnEventListener {
             incomingTraceId = event.traceId();
         }
 
-        // 2. Initialize the tracing boundary for the Carrier microservice JVM scope
+        // Initialize the tracing boundary for the Carrier microservice JVM scope
         Span nextSpan;
         if (incomingTraceId != null) {
             nextSpan = tracer.nextSpan().start();
@@ -44,7 +44,7 @@ public class ReturnEventListener {
             nextSpan = tracer.nextSpan().name("fallback-carrier-span").start();
         }
 
-        // 3. Push the trace context into the active execution thread pool
+        // Push the trace context into the active execution thread pool
         try (Tracer.SpanInScope ws = tracer.withSpan(nextSpan)) {
             if (event == null) {
                 log.warn("[CARRIER-SERVICE] Received an empty or un-parsable Kafka payload envelope.");
@@ -59,7 +59,7 @@ public class ReturnEventListener {
         } catch (Exception e) {
             log.error("[CARRIER-SERVICE-ERROR] Operational exception thrown during label generation stream: {}", e.getMessage(), e);
         } finally {
-            // 4. Tear down the trace span block to prevent memory contamination leaks
+            // Tear down the trace span block to prevent memory contamination leaks
             nextSpan.end();
         }
     }

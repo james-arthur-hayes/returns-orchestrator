@@ -40,7 +40,6 @@ public class NotificationEventListener {
                 return;
             }
 
-            // High-visibility, reader-friendly production logging statements:
             log.info("[NOTIFICATION-SERVICE] Asynchronous Kafka message picked up successfully.");
             log.info("[NOTIFICATION-SERVICE] Processing communication routing rules for Customer: [{}]", event.customerEmail());
             log.info("[NOTIFICATION-SERVICE] MOCK outbound SMTP trigger status -> Notification transactional email sent via SendGrid for Order: [{}]",
