@@ -16,4 +16,16 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Core Spring Boot Observability Infrastructure
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+
+    // Core Reactive Messaging Tracing Capabilities
+    implementation 'io.projectreactor:reactor-core'
+    implementation 'io.projectreactor.kafka:reactor-kafka'
+
+    // Micrometer Tracing
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 }

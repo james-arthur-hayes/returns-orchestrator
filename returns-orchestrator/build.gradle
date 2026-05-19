@@ -22,6 +22,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Core Spring Boot Observability Infrastructure
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+
+    // Core Reactive Messaging Tracing Capabilities
+    implementation 'io.projectreactor:reactor-core'
+    implementation 'io.projectreactor.kafka:reactor-kafka'
+
     // 2. THE DATABASE (Reactive SQL Server)
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
     runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
@@ -42,6 +50,10 @@ dependencies {
     implementation 'org.springframework.kafka:spring-kafka'
 
     implementation project(':common-models')
+
+    // Micrometer Tracing
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 }
 
 // Keep this so Gradle knows exactly where to look
